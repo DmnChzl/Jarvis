@@ -1,0 +1,30 @@
+{
+  "name": "@dmnchzl/jarvis",
+  "version": "0.1.0",
+  "description": "Just A Rather Very Intelligent System",
+  "author": "DmnChzl <dmnchzl@pm.me>",
+  "repository": "https://github.com/dmnchzl/jarvis.git",
+  "scripts": {
+    "dev": "nitro dev --host",
+    "build": "nitro build",
+    "preview": "node .output/server/index.mjs",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@ai-sdk/google": "~2.0.20",
+    "@shikijs/rehype": "^3.13.0",
+    "@types/hast": "~3.0.0",
+    "@types/mdast": "~4.0.0",
+    "@types/node": "~24.8.0",
+    "ai": "~5.0.75",
+    "h3": "~1.15.0",
+    "nitropack": "~2.12.5",
+    "rehype-stringify": "~10.0.0",
+    "remark-parse": "~11.0.0",
+    "remark-rehype": "~11.1.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "~11.0.5",
+    "vitest": "~3.2.0"
+  },
+  "license": "WTFPL"
+}

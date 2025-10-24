@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap');
+
+.geist-thin {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 100;
+}
+.geist-extralight {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 200;
+}
+.geist-light {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+}
+.geist-regular {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+}
+.geist-medium {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+}
+.geist-semibold {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+.geist-bold {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+}
+.geist-extrabold {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+}
+.geist-black {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 900;
+}
+
+.jetbrains-thin {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 100;
+}
+.jetbrains-extralight {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 200;
+}
+.jetbrains-light {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+}
+.jetbrains-regular {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+}
+.jetbrains-medium {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+.jetbrains-semibold {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+.jetbrains-bold {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+.jetbrains-extrabold {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+}
