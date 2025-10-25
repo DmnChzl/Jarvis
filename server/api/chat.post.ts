@@ -1,4 +1,5 @@
-import { addMessage, getAgentByKey, msgEventEmitter } from '@server/utils/db';
+import { getAgentByKey, msgEventEmitter } from '@server/utils/db';
+import { addMessage } from '@database/index';
 import { processAssistantResponse, processAssistantResponseFake } from '@server/workers/process-assistant';
 import { createError, defineEventHandler, readBody, setResponseStatus } from 'h3';
 
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Agent Not Found' });
   }
 
-  addMessage(body.sessionId, body.msgContent);
+  await addMessage(body.sessionId, body.msgContent);
   msgEventEmitter.emit(`chat:${body.sessionId}`, { type: 'answer', payload: body.msgContent });
 
   processAssistantResponse(currentAgent, body.sessionId);

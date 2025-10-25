@@ -2,7 +2,8 @@ import { Introduction } from '@server/templates/components/introduction';
 import { MessageContainer } from '@server/templates/components/message-container';
 import { RequestItem } from '@server/templates/components/request-item';
 import { ResponseItem } from '@server/templates/components/response-item';
-import { findManyMessages, getAgentByKey } from '@server/utils/db';
+import { getAgentByKey } from '@server/utils/db';
+import { findManyMessages } from '@database/index';
 import { mdToHtml } from '@server/utils/parser';
 import { createError, defineEventHandler, getQuery } from 'h3';
 
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
     icon: currentAgent.icon({ width: 48, height: 48, strokeWidth: 1 })
   });
 
-  const messages = findManyMessages(query.sessionId);
+  const messages = await findManyMessages(query.sessionId);
   const items = await Promise.all(
     messages.map(async (message) => {
       if (message.role === 'assistant') {

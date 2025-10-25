@@ -60,7 +60,7 @@ export default eventHandler((event) => {
       </div>
 
       <form
-        class="flex bg-neutral-800 pl-4 pr-2 py-2 rounded-t-[8px] rounded-b-[16px]"
+        class="flex gap-x-4 items-center bg-neutral-800 pl-4 pr-2 py-2 rounded-t-[8px] rounded-b-[16px]"
         autocomplete="off"
         hx-post="/api/chat"
         hx-swap="none"

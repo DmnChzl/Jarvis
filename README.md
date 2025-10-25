@@ -3,6 +3,7 @@
 _Just A Rather Very Intelligent System_
 
 - [AI SDK](https://ai-sdk.dev) - The AI Toolkit for TypeScript
+- [Drizzle](https://orm.drizzle.team) - ORM for you to ~~settle~~ **ship ship ship**
 - [Nitro](https://nitro.build) - Next Generation Server Toolkit
 - [HTMX](https://htmx.org) - High Power Tools for HTML
 - [Tailwind CSS](https://tailwindcss.com) - Rapidly build modern websites without ever leaving your HTML

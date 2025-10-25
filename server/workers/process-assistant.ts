@@ -3,7 +3,8 @@ import { GoogleGenerativeAI } from '@server/models/google-generative-ai';
 import type { GroupedRoot } from '@server/models/group';
 import { MarkdownStreamProcessor } from '@server/models/markdown-stream-processor';
 import { MessageBuilder } from '@server/models/message.builder';
-import { addMessage, findManyMessages, msgEventEmitter } from '@server/utils/db';
+import { msgEventEmitter } from '@server/utils/db';
+import { addMessage, findManyMessages } from '@database/index';
 import { astToMd, mdToAst, mdToHtml, nodeToHtml } from '@server/utils/parser';
 import { streamText } from 'ai';
 
@@ -69,7 +70,7 @@ export const processAssistantResponse = async (agent: Agent, sessionId: string) 
   const processor = new MarkdownStreamProcessor(mdToAst);
   const provider = GoogleGenerativeAI.getInstance().getProvider();
   const model = provider('gemini-2.5-flash');
-  const messages = findManyMessages(sessionId);
+  const messages = await findManyMessages(sessionId);
 
   try {
     const promptMessage = new MessageBuilder().withContent(agent.prompt).withRole('user').build();
