@@ -1,11 +1,11 @@
+import { addMessage, findManyMessages } from '@db/messagesRepository';
 import type { Agent } from '@server/models/agent';
 import { GoogleGenerativeAI } from '@server/models/google-generative-ai';
 import type { GroupedRoot } from '@server/models/group';
 import { MarkdownStreamProcessor } from '@server/models/markdown-stream-processor';
 import { MessageBuilder } from '@server/models/message.builder';
-import { msgEventEmitter } from '@server/utils/db';
-import { addMessage, findManyMessages } from '@database/index';
 import { astToMd, mdToAst, mdToHtml, nodeToHtml } from '@server/utils/parser';
+import { getRedisClient } from '@server/utils/redis-client';
 import { streamText } from 'ai';
 
 const LOREM_IPSUM = [
@@ -41,13 +41,15 @@ export const processAssistantResponseFake = async (_agent: Agent, sessionId: str
     return LOREM_IPSUM[idx];
   });
 
+  const [redisPublisher] = getRedisClient();
+  const channel = `chat:${sessionId}`;
   let htmls: string[];
 
   try {
-    msgEventEmitter.emit(`chat:${sessionId}`, { type: 'start' });
+    redisPublisher.publish(channel, JSON.stringify({ type: 'start' }));
     htmls = await Promise.all(mds.map(mdToHtml));
   } catch {
-    msgEventEmitter.emit(`chat:${sessionId}`, { type: 'error' });
+    redisPublisher.publish(channel, JSON.stringify({ type: 'error' }));
     return;
   }
 
@@ -57,10 +59,10 @@ export const processAssistantResponseFake = async (_agent: Agent, sessionId: str
 
     setTimeout(() => {
       addMessage(sessionId, md, 'assistant');
-      msgEventEmitter.emit(`chat:${sessionId}`, { type: 'response', payload: html });
+      redisPublisher.publish(channel, JSON.stringify({ type: 'response', payload: html }));
 
       if (idx === random - 1) {
-        msgEventEmitter.emit(`chat:${sessionId}`, { type: 'end' });
+        redisPublisher.publish(channel, JSON.stringify({ type: 'end' }));
       }
     }, delay);
   });
@@ -71,6 +73,8 @@ export const processAssistantResponse = async (agent: Agent, sessionId: string) 
   const provider = GoogleGenerativeAI.getInstance().getProvider();
   const model = provider('gemini-2.5-flash');
   const messages = await findManyMessages(sessionId);
+  const [redisPublisher] = getRedisClient();
+  const channel = `chat:${sessionId}`;
 
   try {
     const promptMessage = new MessageBuilder().withContent(agent.prompt).withRole('user').build();
@@ -78,7 +82,7 @@ export const processAssistantResponse = async (agent: Agent, sessionId: string) 
       model,
       messages: [promptMessage, ...messages]
     });
-    msgEventEmitter.emit(`chat:${sessionId}`, { type: 'start' });
+    redisPublisher.publish(channel, JSON.stringify({ type: 'start' }));
 
     const handleResponseBlocks = (blocks: GroupedRoot[]) => {
       for (const block of blocks) {
@@ -86,7 +90,7 @@ export const processAssistantResponse = async (agent: Agent, sessionId: string) 
         addMessage(sessionId, msgContent, 'assistant');
 
         nodeToHtml(...block.children).then((html) => {
-          msgEventEmitter.emit(`chat:${sessionId}`, { type: 'response', payload: html });
+          redisPublisher.publish(channel, JSON.stringify({ type: 'response', payload: html }));
         });
       }
     };
@@ -99,8 +103,8 @@ export const processAssistantResponse = async (agent: Agent, sessionId: string) 
     const finalBlocks = processor.flush();
     handleResponseBlocks(finalBlocks);
 
-    msgEventEmitter.emit(`chat:${sessionId}`, { type: 'end' });
+    redisPublisher.publish(channel, JSON.stringify({ type: 'end' }));
   } catch {
-    msgEventEmitter.emit(`chat:${sessionId}`, { type: 'error' });
+    redisPublisher.publish(channel, JSON.stringify({ type: 'error' }));
   }
 };

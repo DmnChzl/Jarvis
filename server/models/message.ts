@@ -3,5 +3,5 @@ export interface Message {
   sessionId: string;
   role: 'user' | 'assistant';
   content: string;
-  timestamp: number;
+  createdAt: string;
 }

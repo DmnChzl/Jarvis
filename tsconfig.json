@@ -28,7 +28,7 @@
     "lib": ["ESNext", "DOM"],
     "baseUrl": ".",
     "paths": {
-      "@database/*": ["database/*"],
+      "@db/*": ["database/*"],
       "@server/*": ["server/*"]
     }
   }

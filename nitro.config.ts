@@ -7,7 +7,7 @@ export default defineNitroConfig({
   srcDir: 'server',
   imports: false,
   alias: {
-    '@database': path.resolve(__dirname, 'database'),
+    '@db': path.resolve(__dirname, 'database'),
     '@server': path.resolve(__dirname, 'server')
   }
 });

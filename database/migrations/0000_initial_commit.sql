@@ -1,7 +1,7 @@
-CREATE TABLE `messages` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`sessionId` text NOT NULL,
-	`role` text NOT NULL,
-	`content` text NOT NULL,
-	`timestamp` integer NOT NULL
+CREATE TABLE "messages" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"session_id" varchar(36) NOT NULL,
+	"role" varchar NOT NULL,
+	"content" text NOT NULL,
+	"created_at" timestamp NOT NULL
 );

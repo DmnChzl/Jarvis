@@ -1,10 +1,10 @@
 import { RequestItem } from '@server/templates/components/request-item';
 import { ResponseItem } from '@server/templates/components/response-item';
-import { msgEventEmitter } from '@server/utils/db';
+import { getRedisClient } from '@server/utils/redis-client';
 import { htmlInline } from '@server/utils/render';
 import { createError, createEventStream, defineEventHandler, getQuery, setResponseHeaders } from 'h3';
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const query = getQuery<{ sessionId: string }>(event);
   if (!query.sessionId) {
     throw createError({ statusCode: 400, statusMessage: 'Bad Request' });
@@ -17,14 +17,18 @@ export default defineEventHandler((event) => {
   });
 
   const stream = createEventStream(event);
+  const channel = `chat:${query.sessionId}`;
+  const [_, redisSubscriber] = getRedisClient();
 
-  const eventHandler = (action: { type: string; payload?: string }) => {
+  await redisSubscriber.subscribe(channel, (message) => {
+    const action = JSON.parse(message) as { type: string; payload?: string };
+
     if (action.type === 'start') {
       // eslint-disable-next-line no-console
       console.log(`chat:${query.sessionId}`, 'Started');
     }
 
-    if (action.type === 'answer' && action.payload) {
+    if (action.type === 'request' && action.payload) {
       const listItem = RequestItem({ content: action.payload });
       stream.push(htmlInline`${listItem}`);
     }
@@ -38,20 +42,7 @@ export default defineEventHandler((event) => {
       // eslint-disable-next-line no-console
       console.log(`chat:${query.sessionId}`, 'Ended');
     }
+  });
 
-    /*
-    if (action.type === 'error') {
-      stream.close();
-      msgEventEmitter.removeListener(`chat:${query.sessionId}`, eventHandler);
-    }
-    */
-  };
-
-  const listenerCount = msgEventEmitter.listenerCount(`chat:${query.sessionId}`);
-  if (listenerCount > 0) {
-    msgEventEmitter.removeAllListeners(`chat:${query.sessionId}`);
-  }
-
-  msgEventEmitter.on(`chat:${query.sessionId}`, eventHandler);
   return stream.send();
 });

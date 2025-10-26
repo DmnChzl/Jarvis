@@ -3,7 +3,7 @@ import { MessageContainer } from '@server/templates/components/message-container
 import { RequestItem } from '@server/templates/components/request-item';
 import { ResponseItem } from '@server/templates/components/response-item';
 import { getAgentByKey } from '@server/utils/db';
-import { findManyMessages } from '@database/index';
+import { findManyMessages } from '@db/messagesRepository';
 import { mdToHtml } from '@server/utils/parser';
 import { createError, defineEventHandler, getQuery } from 'h3';
 

@@ -1,7 +1,8 @@
-import { getAgentByKey, msgEventEmitter } from '@server/utils/db';
-import { addMessage } from '@database/index';
+import { getAgentByKey } from '@server/utils/db';
+import { addMessage } from '@db/messagesRepository';
 import { processAssistantResponse, processAssistantResponseFake } from '@server/workers/process-assistant';
 import { createError, defineEventHandler, readBody, setResponseStatus } from 'h3';
+import { getRedisClient } from '@server/utils/redis-client';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ msgContent: string; sessionId: string; agentKey: string }>(event);
@@ -15,7 +16,9 @@ export default defineEventHandler(async (event) => {
   }
 
   await addMessage(body.sessionId, body.msgContent);
-  msgEventEmitter.emit(`chat:${body.sessionId}`, { type: 'answer', payload: body.msgContent });
+
+  const [redisPublisher] = getRedisClient();
+  redisPublisher.publish(`chat:${body.sessionId}`, JSON.stringify({ type: 'request', payload: body.msgContent }));
 
   processAssistantResponse(currentAgent, body.sessionId);
   // processAssistantResponseFake(currentAgent, body.sessionId);
