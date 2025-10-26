@@ -1,6 +1,6 @@
 {
   "name": "@dmnchzl/jarvis",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Just A Rather Very Intelligent System",
   "author": "DmnChzl <dmnchzl@pm.me>",
   "repository": "https://github.com/dmnchzl/jarvis.git",
@@ -10,32 +10,30 @@
     "preview": "node .output/server/index.mjs",
     "test": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "postinstall": "pnpm approve-builds"
+    "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
     "@ai-sdk/google": "~2.0.20",
     "@shikijs/rehype": "~3.13.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/hast": "~3.0.0",
     "@types/mdast": "~4.0.0",
     "@types/node": "~24.8.0",
-    "@types/pg": "^8.15.5",
+    "@types/pg": "~8.15.5",
     "ai": "~5.0.75",
-    "better-sqlite3": "~12.4.0",
     "dotenv": "~17.2.0",
     "drizzle-kit": "~0.31.5",
     "drizzle-orm": "~0.44.5",
     "h3": "~1.15.0",
     "nitropack": "~2.12.5",
-    "pg": "^8.16.3",
-    "redis": "^5.9.0",
+    "pg": "~8.16.0",
+    "redis": "~5.9.0",
     "rehype-stringify": "~10.0.0",
     "remark-parse": "~11.0.0",
     "remark-rehype": "~11.1.0",
     "remark-stringify": "~11.0.0",
     "unified": "~11.0.5",
-    "vitest": "~3.2.0"
+    "vitest": "~4.0.0",
+    "zod": "~4.1.10"
   },
   "license": "WTFPL"
 }

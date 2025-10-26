@@ -1,0 +1,13 @@
+<svg width="480" height="480" viewBox="0 0 480 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="480" height="480" rx="160" fill="#7C3AED"/>
+<path d="M372.831 8.92969C435.237 30.752 480 90.1477 480 160V320C480 408.366 408.366 480 320 480H160C141.128 480 123.021 476.73 106.21 470.73L372.831 8.92969Z" fill="#6D28D9"/>
+<path d="M285 360V330" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M195 360V330" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M330 150H150C133.431 150 120 163.431 120 180V300C120 316.569 133.431 330 150 330H330C346.569 330 360 316.569 360 300V180C360 163.431 346.569 150 330 150Z" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M285 225V255" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M195 225V255" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M360 240H390" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M90 240H120" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M285 150V120" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M195 150V120" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

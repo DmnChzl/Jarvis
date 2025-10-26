@@ -28,8 +28,11 @@
     "lib": ["ESNext", "DOM"],
     "baseUrl": ".",
     "paths": {
-      "@db/*": ["database/*"],
-      "@server/*": ["server/*"]
+      "~api/*": ["src/api/*"],
+      "~repositories/*": ["src/services/repositories/*"],
+      "~src/*": ["src/*"],
+      "~templates/*": ["src/templates/*"],
+      "~utils/*": ["src/utils/*"]
     }
   }
 }

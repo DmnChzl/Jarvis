@@ -1,0 +1,18 @@
+:root {
+  --violet: #7c3aed;
+  --purple: #9333ea;
+  --fuchsia: #c026d3;
+}
+
+body {
+  --response-color: var(--violet);
+}
+body[data-theme='j4rv1s'] {
+  --response-color: var(--violet);
+}
+body[data-theme='3d'] {
+  --response-color: var(--purple);
+}
+body[data-theme='m0k4'] {
+  --response-color: var(--fuchsia);
+}
