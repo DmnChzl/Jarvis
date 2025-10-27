@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readBody, setResponseStatus } from 'h3';
 import { findOneAgent } from '~repositories/agentsRepository';
 import { addMessage } from '~repositories/messagesRepository';
-import { runAgentStream } from '~src/services/stream/streamService';
+import { processAgentResponse } from '~src/services/stream/streamService';
 import { publishRedisMessage } from '~utils/redisClient';
 
 export default defineEventHandler(async (event) => {
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     content: body.msgContent
   });
 
-  runAgentStream(body.agentKey, body.sessionId);
+  processAgentResponse(body.agentKey, body.sessionId);
   setResponseStatus(event, 201, 'Created');
   return;
 });

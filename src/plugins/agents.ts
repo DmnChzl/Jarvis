@@ -39,18 +39,22 @@ const mokaAgentValues: AgentEntity = {
 export default async () => {
   console.log('Agents Loading...');
   const startTime = new Date().getTime();
+
   const [jarvisAgent] = await db.select().from(agentsTable).where(eq(agentsTable.key, 'j4rv1s'));
   if (!jarvisAgent) {
     await db.insert(agentsTable).values(jarvisAgentValues);
   }
+
   const [edAgent] = await db.select().from(agentsTable).where(eq(agentsTable.key, '3d'));
   if (!edAgent) {
     await db.insert(agentsTable).values(edAgentValues);
   }
+
   const [mokaAgent] = await db.select().from(agentsTable).where(eq(agentsTable.key, 'm0k4'));
   if (!mokaAgent) {
     await db.insert(agentsTable).values(mokaAgentValues);
   }
+
   const endTime = new Date().getTime();
   const secondDiffing = ((endTime - startTime) / 3600).toFixed(2);
   console.log(`Agents Loaded In ${secondDiffing}s`);

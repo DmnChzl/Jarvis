@@ -1,6 +1,37 @@
 import { createClient } from 'redis';
 import { z } from 'zod';
 
+let redisClient: ReturnType<typeof createClient> | null = null;
+let redisPublisher: ReturnType<typeof createClient> | null = null;
+let redisSubscriber: ReturnType<typeof createClient> | null = null;
+
+export const useRedisGetSet = () => {
+  if (!redisClient) {
+    const url = process.env.REDIS_URL;
+    if (!url) {
+      throw new Error('URL Is Required!');
+    }
+
+    redisClient = createClient({ url });
+  }
+
+  return redisClient;
+};
+
+export const useRedisPubSub = () => {
+  if (!redisPublisher || !redisSubscriber) {
+    const url = process.env.REDIS_URL;
+    if (!url) {
+      throw new Error('URL Is Required!');
+    }
+
+    redisPublisher = createClient({ url });
+    redisSubscriber = createClient({ url });
+  }
+
+  return [redisPublisher, redisSubscriber];
+};
+
 const responseMessageSchema = z.object({
   type: z.literal('response'),
   content: z.string(),
@@ -45,25 +76,8 @@ export const stringifyRedisMessage = (message: RedisMessage): string => {
   return JSON.stringify(message);
 };
 
-let redisPublisher: ReturnType<typeof createClient> | null = null;
-let redisSubscriber: ReturnType<typeof createClient> | null = null;
-
-export const useRedisClient = () => {
-  if (!redisPublisher || !redisSubscriber) {
-    const url = process.env.REDIS_URL;
-    if (!url) {
-      throw new Error('URL Is Required!');
-    }
-
-    redisPublisher = createClient({ url });
-    redisSubscriber = createClient({ url });
-  }
-
-  return [redisPublisher, redisSubscriber];
-};
-
 export const publishRedisMessage = (channel: string, message: RedisMessage) => {
-  const [publisher] = useRedisClient();
+  const [publisher] = useRedisPubSub();
   publisher.publish(channel, stringifyRedisMessage(message));
 };
 
@@ -77,7 +91,7 @@ export const subscribeToRedisChannel = (
     onError?: (error: Error) => void;
   }
 ) => {
-  const [_, subscriber] = useRedisClient();
+  const [_, subscriber] = useRedisPubSub();
 
   return subscriber.subscribe(channel, (value) => {
     const message = parseRedisMessage(value);
