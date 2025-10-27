@@ -5,9 +5,9 @@ import {
   getPopularShows,
   getTrendingMovies,
   getTrendingShows,
-  searchMovieOrShow
+  searchMedia
 } from '~src/services/entertainment/movieService';
-import { getNewReleases, getNewReleasesByGenre } from '~src/services/entertainment/musicService';
+import { getNewReleases, getNewReleasesByGenre, searchMusic } from '~src/services/entertainment/musicService';
 
 export const dateTimeTool = tool({
   description: 'Get the current date and time',
@@ -18,64 +18,84 @@ export const dateTimeTool = tool({
 export const spotifyReleasesTool = tool({
   description: 'Get the latest music releases from Spotify',
   inputSchema: z.object({
-    limit: z.number().optional().describe('Number of results to get (default: 10)'),
+    limit: z.number().optional().describe('Number of results (default: 10)'),
     genre: z.string().optional().describe('Optional musical genre (e.g.: "pop", "rock", "hip-hop", "jazz", "electro")')
   }),
   execute: async ({ genre, limit = 10 }) => {
     try {
       if (genre) {
-        return await getNewReleasesByGenre(genre, limit);
+        const releases = await getNewReleasesByGenre(genre, limit);
+        return JSON.stringify(releases);
       }
-      return await getNewReleases(limit);
+      const releases = await getNewReleases(limit);
+      return JSON.stringify(releases);
     } catch (error) {
       console.warn((error as Error).message);
-      return `Error retrieving music outputs`;
+      return 'Unable to fetch music releases from Spotify';
+    }
+  }
+});
+
+export const spotifySearchTool = tool({
+  description: 'Search for music (album, artist, track, etc.) on Spotify by query',
+  inputSchema: z.object({
+    query: z.string().describe('The search query (e.g., "Daft Punk", "Bohemian Rhapsody", "Man On The Moon")'),
+    type: z
+      .string()
+      .optional()
+      .describe(
+        'The type of content to search for; Can be "album", "artist", "track", or a comma-separated list (default: "album,artist,track")'
+      ),
+    limit: z.number().optional().describe('Number of results (default: 10)')
+  }),
+  execute: async ({ query, type, limit = 10 }) => {
+    try {
+      const result = await searchMusic(query, type, limit);
+      return JSON.stringify(result);
+    } catch (error) {
+      console.warn((error as Error).message);
+      return 'Unable to searc music on Spotify';
     }
   }
 });
 
 export const traktReleasesTool = tool({
-  description: 'Get the latest movies or shows releases from Trakt.tv',
+  description: 'Get trending or popular movies and shows from Trakt',
   inputSchema: z.object({
     type: z
       .enum(['trending-movies', 'trending-shows', 'popular-movies', 'popular-shows'])
-      .describe('Type of content to fetch'),
+      .describe('The type of content to fetch'),
     limit: z.number().optional().describe('Number of results (default: 10, max: 20)'),
-    search: z.string().optional().describe('Search for a specific movie or shows by title')
+    search: z.string().optional().describe('Description of the requested movie or series')
   }),
   execute: async (input) => {
     try {
       const limit = Math.min(input.limit ?? 10, 20);
 
       if (input.search) {
-        console.log('searchMovieOrShow', input.search);
-        const searchResult = await searchMovieOrShow(input.search);
+        const searchResult = await searchMedia(input.search);
         return JSON.stringify(searchResult);
       }
 
       switch (input.type) {
         case 'trending-movies':
-          console.log('trending-movies');
           const trendingMovies = await getTrendingMovies(limit);
           return JSON.stringify(trendingMovies);
         case 'trending-shows':
-          console.log('trending-shows');
           const trendingShows = await getTrendingShows(limit);
           return JSON.stringify(trendingShows);
         case 'popular-movies':
-          console.log('popular-movies');
           const popularMovies = await getPopularMovies(limit);
           return JSON.stringify(popularMovies);
         case 'popular-shows':
-          console.log('popular-shows');
           const popularShows = await getPopularShows(limit);
           return JSON.stringify(popularShows);
         default:
-          return 'Unrecognized type';
+          return 'Unknown type of content...';
       }
     } catch (error) {
       console.warn((error as Error).message);
-      return 'Error fetching Trakt data...';
+      return 'Unable to fetch movies or shows from Trakt';
     }
   }
 });
@@ -85,7 +105,9 @@ export const getAgentTools = (agentKey: string): Record<string, Tool> => {
     case 'j4rv1s':
       return { dateTimeTool };
     case '3d':
-      return { dateTimeTool, spotifyReleasesTool, traktReleasesTool };
+      return { dateTimeTool, spotifyReleasesTool, spotifySearchTool, traktReleasesTool };
+    case 'm0k4':
+      return {};
     default:
       return {};
   }

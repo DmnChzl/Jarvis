@@ -1,3 +1,4 @@
+import type { SpotifyReleases, SpotifySearchResult } from '~src/models/spotify';
 import { useRedisGetSet } from '~utils/redisClient';
 
 const api = {
@@ -5,10 +6,9 @@ const api = {
   newReleases: (limit: number, offset: number) => {
     return `https://api.spotify.com/v1/browse/new-releases?limit=${limit}&offset=${offset}`;
   },
-  search: (genre: string, limit: number, market: string) => {
-    return `https://api.spotify.com/v1/search?q=genre:${encodeURIComponent(
-      genre
-    )}&type=album&limit=${limit}&market=${market}`;
+  search: (_genre: string, type: string, limit: number, market: string) => {
+    const genre = encodeURIComponent(_genre);
+    return `https://api.spotify.com/v1/search?q=genre:${genre}&type=${type}&limit=${limit}&market=${market}`;
   }
 };
 
@@ -21,8 +21,12 @@ const getSpotifyAccessToken = async (): Promise<string> => {
   const cachedToken = await redisClient.get(channel);
   if (cachedToken) return cachedToken;
 
-  const clientId = process.env.SPOTIFY_CLIENT_ID ?? '';
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET ?? '';
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Spotify Credentials Required!');
+  }
 
   const response = await fetch(api.token(), {
     method: 'POST',
@@ -37,39 +41,17 @@ const getSpotifyAccessToken = async (): Promise<string> => {
   });
 
   const data = (await response.json()) as ClientCredentials;
-  await redisClient.setEx(channel, data.expires_in - 300, data.access_token);
+  await redisClient.setEx(channel, data.expires_in - 300, data.access_token); // 1 Hour - 5 Minutes
   return data.access_token;
 };
 
-interface AlbumItem {
-  id: string;
-  name: string;
-  artists: {
-    name: string;
-  }[];
-  release_date: string;
-  images: {
-    url: string;
-  }[];
-  external_urls: {
-    spotify: string;
-  };
-}
+export const getNewReleases = async (limit = 10, offset = 0): Promise<SpotifyReleases> => {
+  const redisClient = useRedisGetSet();
+  const channel = 'spotify:new_releases';
 
-const mapAlbumItemToRelease = (album: AlbumItem) => {
-  const artist = album.artists.map((artist) => artist.name).join(', ');
-  const releaseDate = album.release_date;
-  const spotifyUrl = album.external_urls.spotify;
-  // const [coverImage] = album.images;
+  const cachedReleases = await redisClient.get(channel);
+  if (cachedReleases) return JSON.parse(cachedReleases) as SpotifyReleases;
 
-  return (
-    `🎵 **${album.name}** par ${artist}\n` +
-    `📅 Sortie: ${new Date(releaseDate).toLocaleDateString('fr-FR')}\n` +
-    `🔗 [Écouter sur Spotify](${spotifyUrl})`
-  );
-};
-
-export const getNewReleases = async (limit = 10, offset = 0): Promise<string> => {
   const token = await getSpotifyAccessToken();
 
   const response = await fetch(api.newReleases(limit, offset), {
@@ -79,36 +61,62 @@ export const getNewReleases = async (limit = 10, offset = 0): Promise<string> =>
   });
 
   if (!response.ok) {
-    throw new Error('Spotify API Error');
+    throw new Error('Unable to fetch new releases from Spotify');
   }
 
-  const data = (await response.json()) as { albums: { items: AlbumItem[] } };
-  return JSON.stringify(data);
-
-  // const releases = data.albums.items.map(mapAlbumItemToRelease);
-  // return `Voici les ${data.albums.items.length} dernières sorties musicales:\n\n${releases}`;
+  const data = (await response.json()) as SpotifyReleases;
+  await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
+  return data;
 };
 
-export const getNewReleasesByGenre = async (genre: string, limit = 10): Promise<string> => {
+export const getNewReleasesByGenre = async (genre: string, limit = 10): Promise<SpotifyReleases> => {
+  const redisClient = useRedisGetSet();
+  const channel = `spotify:new_releases:${genre}`;
+
+  const cachedReleases = await redisClient.get(channel);
+  if (cachedReleases) return JSON.parse(cachedReleases) as SpotifyReleases;
+
   const token = await getSpotifyAccessToken();
 
-  const response = await fetch(api.search(genre, limit, 'FR'), {
+  const response = await fetch(api.search(genre, 'album', limit, 'FR'), {
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
 
   if (!response.ok) {
-    throw new Error('Spotify API Error');
+    throw new Error('Unable to fetch new releases (by genre) from Spotify');
   }
 
-  const data = (await response.json()) as { albums: { items: AlbumItem[] } };
-  return JSON.stringify(data);
+  const data = (await response.json()) as SpotifyReleases;
+  await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
+  return data;
+};
 
-  // if (data.albums.items.length === 0) {
-  //   return `Aucune sortie musicale trouvée pour le genre "${genre}".`;
-  // }
+export const searchMusic = async (
+  query: string,
+  type: 'album' | 'artist' | 'track' | string = 'album,artist,track',
+  limit = 10
+): Promise<SpotifySearchResult> => {
+  const redisClient = useRedisGetSet();
+  const channel = `spotify:search:${query}`;
 
-  // const releases = data.albums.items.map(mapAlbumItemToRelease);
-  // return `Sorties récentes en ${genre}:\n\n${releases}`;
+  const cachedSearch = await redisClient.get(channel);
+  if (cachedSearch) return JSON.parse(cachedSearch) as SpotifySearchResult;
+
+  const token = await getSpotifyAccessToken();
+
+  const response = await fetch(api.search(query, type, limit, 'FR'), {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to searc music on Spotify');
+  }
+
+  const data = (await response.json()) as SpotifySearchResult;
+  await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
+  return data;
 };

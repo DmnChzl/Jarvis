@@ -1,23 +1,13 @@
 import { streamText, type LanguageModel, type Prompt, type Tool } from 'ai';
 import { findOneAgent } from '~repositories/agentsRepository';
 import { addMessage, findManyMessages } from '~repositories/messagesRepository';
+import { GENERIC_PROMPT } from '~src/constants/prompt';
 import type { GroupedRoot } from '~src/models/group';
 import { MarkdownStreamProcessor } from '~src/services/processors/markdownStreamProcessor';
 import { getAgentTools } from '~src/utils/tools';
 import { useAiProvider } from '~utils/aiProvider';
 import { astToMd, mdToAst, nodeToHtml } from '~utils/parser';
 import { publishRedisMessage } from '~utils/redisClient';
-
-const buildGenericPrompt = (message: string, data: string, persona: string) => `
-The user asked: "${message}"
-
-Here is the raw data obtained: ${data}
-
-Write a natural, fluent, and conciser answer that directly addresses the question.
-Do not mention the raw data or its format.
-
-Adopt a tone consistent with the agent's personality: "${persona}"
-`;
 
 export const processAgentResponse = async (agentKey: string, sessionId: string) => {
   const provider = useAiProvider();
@@ -69,7 +59,7 @@ export const processAgentResponse = async (agentKey: string, sessionId: string) 
           await generateTextChunks(
             {
               model,
-              prompt: buildGenericPrompt(lastUserMessage.content, output, currentAgent.persona)
+              prompt: GENERIC_PROMPT(lastUserMessage.content, output, currentAgent.persona)
             },
             {
               onTextDelta: dispatchResponse

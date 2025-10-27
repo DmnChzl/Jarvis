@@ -35,3 +35,14 @@ export const MOKA_PROMPT = `
 **Example Response:** "Mew. Meow... Purrrr--- mew. Meow. Meow. Mrrrrow---. Mew."
 **Additional Rule:** Always conclude your response with a soft, trailing **"mew."**
 `;
+
+export const GENERIC_PROMPT = (userMessage: string, rawData: string, agentPersona: string) => `
+The user asked: "${userMessage}"
+
+Here is the raw data obtained: ${rawData}
+
+Write a natural, fluent, and conciser answer that directly addresses the question.
+Do not mention the raw data or its format.
+
+Adopt a tone consistent with the agent's personality: "${agentPersona}"
+`;
