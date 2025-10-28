@@ -1,7 +1,14 @@
-import type { SpotifyReleases, SpotifySearchResult } from '~src/models/spotify';
-import { useRedisGetSet } from '~utils/redisClient';
+import {
+  clientCredentialsSchema,
+  spotifyReleasesSchema,
+  spotifySearchResultSchema,
+  type SpotifyReleases,
+  type SpotifySearchResult
+} from '~src/schemas/spotifySchema';
+import { useRedisClient } from '~utils/redisClient';
+import { refetch } from '~utils/refetch';
 
-const api = {
+const spotifyApi = {
   token: () => 'https://accounts.spotify.com/api/token',
   newReleases: (limit: number, offset: number) => {
     return `https://api.spotify.com/v1/browse/new-releases?limit=${limit}&offset=${offset}`;
@@ -12,10 +19,8 @@ const api = {
   }
 };
 
-type ClientCredentials = { access_token: string; expires_in: number };
-
 const getSpotifyAccessToken = async (): Promise<string> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = 'spotify:access_token';
 
   const cachedToken = await redisClient.get(channel);
@@ -23,12 +28,11 @@ const getSpotifyAccessToken = async (): Promise<string> => {
 
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-
   if (!clientId || !clientSecret) {
     throw new Error('Spotify Credentials Required!');
   }
 
-  const response = await fetch(api.token(), {
+  const data = await refetch(spotifyApi.token(), clientCredentialsSchema, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
@@ -40,57 +44,60 @@ const getSpotifyAccessToken = async (): Promise<string> => {
     })
   });
 
-  const data = (await response.json()) as ClientCredentials;
   await redisClient.setEx(channel, data.expires_in - 300, data.access_token); // 1 Hour - 5 Minutes
   return data.access_token;
 };
 
 export const getNewReleases = async (limit = 10, offset = 0): Promise<SpotifyReleases> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = 'spotify:new_releases';
 
   const cachedReleases = await redisClient.get(channel);
-  if (cachedReleases) return JSON.parse(cachedReleases) as SpotifyReleases;
+  if (cachedReleases) {
+    const data = JSON.parse(cachedReleases);
+    return spotifyReleasesSchema.parse(data);
+  }
 
   const token = await getSpotifyAccessToken();
 
-  const response = await fetch(api.newReleases(limit, offset), {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  try {
+    const data = await refetch(spotifyApi.newReleases(limit, offset), spotifyReleasesSchema, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  if (!response.ok) {
+    await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
+    return data;
+  } catch {
     throw new Error('Unable to fetch new releases from Spotify');
   }
-
-  const data = (await response.json()) as SpotifyReleases;
-  await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
-  return data;
 };
 
 export const getNewReleasesByGenre = async (genre: string, limit = 10): Promise<SpotifyReleases> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = `spotify:new_releases:${genre}`;
 
   const cachedReleases = await redisClient.get(channel);
-  if (cachedReleases) return JSON.parse(cachedReleases) as SpotifyReleases;
+  if (cachedReleases) {
+    const data = JSON.parse(cachedReleases);
+    return spotifyReleasesSchema.parse(data);
+  }
 
   const token = await getSpotifyAccessToken();
 
-  const response = await fetch(api.search(genre, 'album', limit, 'FR'), {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  try {
+    const data = await refetch(spotifyApi.search(genre, 'album', limit, 'FR'), spotifyReleasesSchema, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  if (!response.ok) {
+    await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
+    return data;
+  } catch {
     throw new Error('Unable to fetch new releases (by genre) from Spotify');
   }
-
-  const data = (await response.json()) as SpotifyReleases;
-  await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
-  return data;
 };
 
 export const searchMusic = async (
@@ -98,25 +105,27 @@ export const searchMusic = async (
   type: 'album' | 'artist' | 'track' | string = 'album,artist,track',
   limit = 10
 ): Promise<SpotifySearchResult> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = `spotify:search:${query}`;
 
   const cachedSearch = await redisClient.get(channel);
-  if (cachedSearch) return JSON.parse(cachedSearch) as SpotifySearchResult;
+  if (cachedSearch) {
+    const data = JSON.parse(cachedSearch);
+    return spotifySearchResultSchema.parse(data);
+  }
 
   const token = await getSpotifyAccessToken();
 
-  const response = await fetch(api.search(query, type, limit, 'FR'), {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  try {
+    const data = await refetch(spotifyApi.search(query, type, limit, 'FR'), spotifySearchResultSchema, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  if (!response.ok) {
-    throw new Error('Unable to searc music on Spotify');
+    await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
+    return data;
+  } catch {
+    throw new Error('Unable to search music on Spotify');
   }
-
-  const data = (await response.json()) as SpotifySearchResult;
-  await redisClient.setEx(channel, 10800, JSON.stringify(data)); // 3 Hours
-  return data;
 };

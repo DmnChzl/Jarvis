@@ -1,5 +1,5 @@
 import type { Blockquote, Code, RootContent as Content, Heading, List, Root as RootTree } from 'mdast';
-import type { BlockquoteGroup, Group, GroupedRoot, HeadingGroup, ListGroup } from './group';
+import type { BlockquoteGroup, Group, GroupedRoot, HeadingGroup, ListGroup } from '~src/models/group';
 
 type ParserFunc = (markdown: string) => RootTree;
 

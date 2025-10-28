@@ -1,14 +1,15 @@
 import { eq } from 'drizzle-orm';
 import { db } from '~src/database';
 import { agentsTable, messagesTable, type AgentEntity, type MessageEntity } from '~src/database/schema';
-import type { Message } from '~src/models/message';
 
-export const addMessage = async ({
-  agentKey,
-  sessionId,
-  role,
-  content
-}: Pick<Message, 'agentKey' | 'sessionId' | 'role' | 'content'>): Promise<MessageEntity> => {
+interface Message {
+  agentKey?: string;
+  sessionId: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export const addMessage = async ({ agentKey, sessionId, role, content }: Message): Promise<MessageEntity> => {
   const [message] = await db
     .insert(messagesTable)
     .values({ agentKey, sessionId, content, role, createdAt: new Date() })

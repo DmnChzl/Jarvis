@@ -1,4 +1,5 @@
 import { createError, createEventStream, defineEventHandler, getQuery, setResponseHeaders } from 'h3';
+import { chatMessageSchema } from '~src/schemas/redisSchema';
 import { RequestItem } from '~templates/components/request-item';
 import { ResponseItem } from '~templates/components/response-item';
 import { subscribeToRedisChannel } from '~utils/redisClient';
@@ -19,22 +20,27 @@ export default defineEventHandler(async (event) => {
   const stream = createEventStream(event);
   const channel = `chat:${query.sessionId}`;
 
-  await subscribeToRedisChannel(channel, {
-    onStart: ({ agentName }) => {
-      // eslint-disable-next-line no-console
-      console.log(channel, `${agentName} Has Started To Respond`);
-    },
-    onRequest: (content) => {
-      const listItem = RequestItem({ content });
-      stream.push(htmlInline`${listItem}`);
-    },
-    onResponse: (content, { themeColor }) => {
-      const listItem = ResponseItem({ content, bgColor: themeColor });
-      stream.push(htmlInline`${listItem}`);
-    },
-    onEnd: ({ agentName }) => {
-      // eslint-disable-next-line no-console
-      console.log(channel, `${agentName} Has Finished To Respond`);
+  await subscribeToRedisChannel(channel, chatMessageSchema, (message) => {
+    switch (message.type) {
+      case 'start':
+        // eslint-disable-next-line no-console
+        console.log(channel, `${message.metadata.agentName} Has Started To Respond`);
+        break;
+
+      case 'request':
+        const requestItem = RequestItem({ content: message.content });
+        stream.push(htmlInline`${requestItem}`);
+        break;
+
+      case 'response':
+        const responseItem = ResponseItem({ content: message.content, bgColor: message.metadata.themeColor });
+        stream.push(htmlInline`${responseItem}`);
+        break;
+
+      case 'end':
+        // eslint-disable-next-line no-console
+        console.log(channel, `${message.metadata.agentName} Has Finished To Respond`);
+        break;
     }
   });
 

@@ -4,10 +4,10 @@ import { addMessage, findManyMessages } from '~repositories/messagesRepository';
 import { GENERIC_PROMPT } from '~src/constants/prompt';
 import type { GroupedRoot } from '~src/models/group';
 import { MarkdownStreamProcessor } from '~src/services/processors/markdownStreamProcessor';
-import { getAgentTools } from '~src/utils/tools';
 import { useAiProvider } from '~utils/aiProvider';
 import { astToMd, mdToAst, nodeToHtml } from '~utils/parser';
 import { publishRedisMessage } from '~utils/redisClient';
+import { getAgentTools } from '~utils/tools';
 
 export const processAgentResponse = async (agentKey: string, sessionId: string) => {
   const provider = useAiProvider();

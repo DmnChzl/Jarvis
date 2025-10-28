@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:18-alpine
-    container_name: Postgres4Jarvis
+    container_name: postgres-4-jarvis
     environment:
       POSTGRES_USER:
       POSTGRES_PASSWORD:
@@ -13,7 +13,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: Redis4Jarvis
+    container_name: redis-4-jarvis
     ports:
       - '6379:6379'
     volumes:

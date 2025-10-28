@@ -1,128 +1,138 @@
-import type { TraktMovie, TraktMovieWithStats, TraktShow, TraktShowWithStats } from '~src/models/trakt';
-import { useRedisGetSet } from '~src/utils/redisClient';
+import { z } from 'zod';
+import {
+  traktMovieSchema,
+  traktMovieWithStatsSchema,
+  traktSearchResultSchema,
+  traktShowSchema,
+  traktShowWithStatsSchema,
+  type TraktMovie,
+  type TraktMovieWithStats,
+  type TraktSearchResult,
+  type TraktShow,
+  type TraktShowWithStats
+} from '~src/schemas/traktSchema';
+import { useRedisClient } from '~utils/redisClient';
+import { refetch } from '~utils/refetch';
 
-const api = {
+const traktApi = {
   trendingMovies: (limit: number) => `https://api.trakt.tv/movies/trending?limit=${limit}&extended=full`,
   trendingShows: (limit: number) => `https://api.trakt.tv/shows/trending?limit=${limit}&extended=full`,
   popularMovies: (limit: number) => `https://api.trakt.tv/movies/popular?limit=${limit}&extended=full`,
   popularShows: (limit: number) => `https://api.trakt.tv/shows/popular?limit=${limit}&extended=full`,
-  search: (query: string, type: 'all' | 'movie' | 'show', limit: number) => {
-    return `https://api.trakt.tv/search/${type}?query=${encodeURIComponent(query)}&limit=${limit}&extended=full`;
+  search: (_query: string, type: 'all' | 'movie' | 'show', limit: number) => {
+    const query = encodeURIComponent(_query);
+    return `https://api.trakt.tv/search/${type}?query=${query}&limit=${limit}&extended=full`;
   }
+};
+
+const getTraktHeaders = () => {
+  const apiKey = process.env.TRAKT_API_KEY;
+  if (!apiKey) throw new Error('Trakt API Key Required!');
+
+  return {
+    'Content-Type': 'application/json',
+    'trakt-api-key': apiKey,
+    'trakt-api-version': '2'
+  };
 };
 
 export const getTrendingMovies = async (limit = 10): Promise<TraktMovieWithStats[]> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = 'trakt:trending_movies';
 
   const cachedMovies = await redisClient.get(channel);
-  if (cachedMovies) return JSON.parse(cachedMovies) as TraktMovieWithStats[];
-
-  const response = await fetch(api.trendingMovies(limit), {
-    headers: {
-      'Content-Type': 'application/json',
-      'trakt-api-key': process.env.TRAKT_API_KEY ?? '',
-      'trakt-api-version': '2'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to fetch trending movies from Trakt');
+  if (cachedMovies) {
+    const data = JSON.parse(cachedMovies);
+    return z.array(traktMovieWithStatsSchema).parse(data);
   }
 
-  const data = (await response.json()) as TraktMovieWithStats[];
-  await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
-  return data;
+  try {
+    const data = await refetch(traktApi.trendingMovies(limit), z.array(traktMovieWithStatsSchema), {
+      headers: getTraktHeaders()
+    });
+
+    await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
+    return data;
+  } catch {
+    throw new Error('Unable to fetch trending movies from Trakt');
+  }
 };
 
 export const getTrendingShows = async (limit = 10): Promise<TraktShowWithStats[]> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = 'trakt:trending_shows';
 
   const cachedShows = await redisClient.get(channel);
-  if (cachedShows) return JSON.parse(cachedShows) as TraktShowWithStats[];
-
-  const response = await fetch(api.trendingShows(limit), {
-    headers: {
-      'Content-Type': 'application/json',
-      'trakt-api-key': process.env.TRAKT_API_KEY ?? '',
-      'trakt-api-version': '2'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to fetch trending shows from Trakt');
+  if (cachedShows) {
+    const data = JSON.parse(cachedShows);
+    return z.array(traktShowWithStatsSchema).parse(data);
   }
 
-  const data = (await response.json()) as TraktShowWithStats[];
-  await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
-  return data;
+  try {
+    const data = await refetch(traktApi.trendingShows(limit), z.array(traktShowWithStatsSchema), {
+      headers: getTraktHeaders()
+    });
+
+    await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
+    return data;
+  } catch {
+    throw new Error('Unable to fetch trending shows from Trakt');
+  }
 };
 
 export const getPopularMovies = async (limit = 10): Promise<TraktMovie[]> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = 'trakt:popular_movies';
 
   const cachedMovies = await redisClient.get(channel);
-  if (cachedMovies) return JSON.parse(cachedMovies) as TraktMovie[];
-
-  const response = await fetch(api.popularMovies(limit), {
-    headers: {
-      'Content-Type': 'application/json',
-      'trakt-api-key': process.env.TRAKT_API_KEY ?? '',
-      'trakt-api-version': '2'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Unable to fetch popular movies from Trakt');
+  if (cachedMovies) {
+    const data = JSON.parse(cachedMovies);
+    return z.array(traktMovieSchema).parse(data);
   }
 
-  const data = (await response.json()) as TraktMovie[];
-  await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
-  return data;
+  try {
+    const data = await refetch(traktApi.popularMovies(limit), z.array(traktMovieSchema), {
+      headers: getTraktHeaders()
+    });
+
+    await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
+    return data;
+  } catch {
+    throw new Error('Unable to fetch popular movies from Trakt');
+  }
 };
 
 export const getPopularShows = async (limit = 10): Promise<TraktShow[]> => {
-  const redisClient = useRedisGetSet();
+  const redisClient = useRedisClient();
   const channel = 'trakt:popular_shows';
 
   const cachedShows = await redisClient.get(channel);
-  if (cachedShows) return JSON.parse(cachedShows) as TraktShow[];
+  if (cachedShows) {
+    const data = JSON.parse(cachedShows);
+    return z.array(traktShowSchema).parse(data);
+  }
 
-  const response = await fetch(api.popularShows(limit), {
-    headers: {
-      'Content-Type': 'application/json',
-      'trakt-api-key': process.env.TRAKT_API_KEY ?? '',
-      'trakt-api-version': '2'
-    }
-  });
+  try {
+    const data = await refetch(traktApi.popularShows(limit), z.array(traktShowSchema), {
+      headers: getTraktHeaders()
+    });
 
-  if (!response.ok) {
+    await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
+    return data;
+  } catch {
     throw new Error('Unable to fetch popular shows from Trakt');
   }
-
-  const data = (await response.json()) as TraktShow[];
-  await redisClient.setEx(channel, 21600, JSON.stringify(data)); // 6 Hours
-  return data;
 };
 
-export const searchMedia = async (
+export const searchMovieOrShow = async (
   query: string,
   type: 'all' | 'movie' | 'show' = 'all'
-): Promise<Array<{ movie?: TraktMovie; show?: TraktShow }>> => {
-  const response = await fetch(api.search(query, type, 10), {
-    headers: {
-      'Content-Type': 'application/json',
-      'trakt-api-key': process.env.TRAKT_API_KEY ?? '',
-      'trakt-api-version': '2'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Trakt API Error');
+): Promise<TraktSearchResult[]> => {
+  try {
+    return await refetch(traktApi.search(query, type, 10), z.array(traktSearchResultSchema), {
+      headers: getTraktHeaders()
+    });
+  } catch {
+    throw new Error('Unable to search movie or show on Trakt');
   }
-
-  const data = (await response.json()) as Array<{ movie?: TraktMovie; show?: TraktShow }>;
-  return data;
 };
