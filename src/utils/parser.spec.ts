@@ -1,8 +1,8 @@
-import type { RootContent as Content, Root as RootTree } from 'mdast';
+import type { RootContent as ContentNode, Root as RootNode } from 'mdast';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { astToHtml, astToMd, loadAstProcessors, loadMdProcessors, mdToAst, mdToHtml, nodeToHtml } from './parser';
 
-const PARAGRAPH_NODE: Content = {
+const PARAGRAPH_NODE: ContentNode = {
   type: 'paragraph',
   children: [
     {
@@ -25,7 +25,7 @@ const PARAGRAPH_NODE: Content = {
   position: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 31, offset: 30 } }
 };
 
-const ROOT_TREE: RootTree = {
+const ROOT_NODE: RootNode = {
   type: 'root',
   children: [PARAGRAPH_NODE],
   position: { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: 31, offset: 30 } }
@@ -55,18 +55,18 @@ describe('parser', () => {
   });
 
   it('should parse abstract syntax tree to html', async () => {
-    const html = await astToHtml(ROOT_TREE);
+    const html = await astToHtml(ROOT_NODE);
     expect(html).toEqual('<p><strong>Lorem ipsum dolor</strong> sit amet</p>');
   });
 
   it('should parse abstract syntax tree to markdown', () => {
-    const html = astToMd(ROOT_TREE);
+    const html = astToMd(ROOT_NODE);
     expect(html).toEqual('**Lorem ipsum dolor** sit amet\n');
   });
 
   it('should parse markdown to abstract syntax tree', async () => {
-    const tree = mdToAst('**Lorem ipsum dolor** sit amet');
-    expect(tree).toEqual(ROOT_TREE);
+    const node = mdToAst('**Lorem ipsum dolor** sit amet');
+    expect(node).toEqual(ROOT_NODE);
   });
 
   it('should parse markdown to html', async () => {

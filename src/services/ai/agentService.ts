@@ -2,7 +2,7 @@ import { streamText, type LanguageModel, type Prompt, type Tool } from 'ai';
 import { findOneAgent } from '~repositories/agentsRepository';
 import { addMessage, findManyMessages } from '~repositories/messagesRepository';
 import { GENERIC_PROMPT } from '~src/constants/prompt';
-import type { GroupedRoot } from '~src/models/group';
+import type { GroupedNode } from '~src/models/group';
 import { MarkdownStreamProcessor } from '~src/services/processors/markdownStreamProcessor';
 import { useAiProvider } from '~utils/aiProvider';
 import { astToMd, mdToAst, nodeToHtml } from '~utils/parser';
@@ -23,7 +23,7 @@ export const processAgentResponse = async (agentKey: string, sessionId: string) 
   const userMessages = messages.filter((msg) => msg.role === 'user');
   const lastUserMessage = userMessages[userMessages.length - 1];
 
-  const dispatchResponse = (nodes: GroupedRoot[]) => {
+  const dispatchResponse = (nodes: GroupedNode[]) => {
     for (const node of nodes) {
       const msgContent = astToMd(node);
       addMessage({
@@ -81,7 +81,7 @@ type GenerateTextOptions = Prompt & {
 };
 
 interface GenerateTextHandlers {
-  onTextDelta: (nodes: GroupedRoot[]) => void;
+  onTextDelta: (nodes: GroupedNode[]) => void;
   onToolResult?: (output: string) => Promise<void>;
 }
 

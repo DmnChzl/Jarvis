@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import {
   traktMovieSchema,
-  traktMovieWithStatsSchema,
   traktSearchResultSchema,
   traktShowSchema,
-  traktShowWithStatsSchema,
+  traktTrendingMovieSchema,
+  traktTrendingShowSchema,
   type TraktMovie,
-  type TraktMovieWithStats,
   type TraktSearchResult,
   type TraktShow,
-  type TraktShowWithStats
+  type TraktTrendingMovie,
+  type TraktTrendingShow
 } from '~src/schemas/traktSchema';
 import { useRedisClient } from '~utils/redisClient';
 import { refetch } from '~utils/refetch';
@@ -36,18 +36,18 @@ const getTraktHeaders = () => {
   };
 };
 
-export const getTrendingMovies = async (limit = 10): Promise<TraktMovieWithStats[]> => {
+export const getTrendingMovies = async (limit = 10): Promise<TraktTrendingMovie[]> => {
   const redisClient = useRedisClient();
   const channel = 'trakt:trending_movies';
 
   const cachedMovies = await redisClient.get(channel);
   if (cachedMovies) {
     const data = JSON.parse(cachedMovies);
-    return z.array(traktMovieWithStatsSchema).parse(data);
+    return z.array(traktTrendingMovieSchema).parse(data);
   }
 
   try {
-    const data = await refetch(traktApi.trendingMovies(limit), z.array(traktMovieWithStatsSchema), {
+    const data = await refetch(traktApi.trendingMovies(limit), z.array(traktTrendingMovieSchema), {
       headers: getTraktHeaders()
     });
 
@@ -58,18 +58,18 @@ export const getTrendingMovies = async (limit = 10): Promise<TraktMovieWithStats
   }
 };
 
-export const getTrendingShows = async (limit = 10): Promise<TraktShowWithStats[]> => {
+export const getTrendingShows = async (limit = 10): Promise<TraktTrendingShow[]> => {
   const redisClient = useRedisClient();
   const channel = 'trakt:trending_shows';
 
   const cachedShows = await redisClient.get(channel);
   if (cachedShows) {
     const data = JSON.parse(cachedShows);
-    return z.array(traktShowWithStatsSchema).parse(data);
+    return z.array(traktTrendingShowSchema).parse(data);
   }
 
   try {
-    const data = await refetch(traktApi.trendingShows(limit), z.array(traktShowWithStatsSchema), {
+    const data = await refetch(traktApi.trendingShows(limit), z.array(traktTrendingShowSchema), {
       headers: getTraktHeaders()
     });
 

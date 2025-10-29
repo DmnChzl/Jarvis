@@ -13,9 +13,9 @@ const spotifyApi = {
   newReleases: (limit: number, offset: number) => {
     return `https://api.spotify.com/v1/browse/new-releases?limit=${limit}&offset=${offset}`;
   },
-  search: (_genre: string, type: string, limit: number, market: string) => {
-    const genre = encodeURIComponent(_genre);
-    return `https://api.spotify.com/v1/search?q=genre:${genre}&type=${type}&limit=${limit}&market=${market}`;
+  search: (_query: string, type: string, limit: number, market: string) => {
+    const query = encodeURIComponent(_query);
+    return `https://api.spotify.com/v1/search?q=${query}&type=${type}&limit=${limit}&market=${market}`;
   }
 };
 
@@ -106,7 +106,7 @@ export const searchMusic = async (
   limit = 10
 ): Promise<SpotifySearchResult> => {
   const redisClient = useRedisClient();
-  const channel = `spotify:search:${query}`;
+  const channel = `spotify:search:${query}:${type}`;
 
   const cachedSearch = await redisClient.get(channel);
   if (cachedSearch) {

@@ -6,7 +6,7 @@ export const useAiProvider = () => {
   if (!aiProvider) {
     const apiKey = process.env.AI_API_KEY;
     if (!apiKey) {
-      throw new Error('API Key Is Required!');
+      throw new Error('AI API Key Is Required!');
     }
 
     aiProvider = createGoogleGenerativeAI({

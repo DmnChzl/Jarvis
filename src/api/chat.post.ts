@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readBody, setResponseStatus } from 'h3';
 import { findOneAgent } from '~repositories/agentsRepository';
 import { addMessage } from '~repositories/messagesRepository';
-import { processAgentResponse } from '~src/services/stream/streamService';
+import { processAgentResponse } from '~src/services/ai/agentService';
 import { publishRedisMessage } from '~utils/redisClient';
 
 export default defineEventHandler(async (event) => {

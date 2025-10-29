@@ -1,4 +1,11 @@
-import type { Blockquote, Code, RootContent as Content, Heading, List, Root as RootTree } from 'mdast';
+import type {
+  Blockquote as BlockquoteNode,
+  Code as CodeNode,
+  RootContent as ContentNode,
+  Heading as HeadingNode,
+  List as ListNode,
+  Root as RootNode
+} from 'mdast';
 
 interface BaseGroup {
   nodeCount: number;
@@ -6,31 +13,31 @@ interface BaseGroup {
 
 export interface HeadingGroup extends BaseGroup {
   type: 'heading-grp';
-  heading: Heading;
-  content: Content[];
+  heading: HeadingNode;
+  content: ContentNode[];
 }
 
 export interface ListGroup extends BaseGroup {
   type: 'list-grp';
-  list: List;
+  list: ListNode;
   listType: 'ordered' | 'unordered';
 }
 
-export interface BlockquoteGroup extends BaseGroup {
-  type: 'blockquote-grp';
-  nodes: Blockquote[];
+export interface QuoteGroup extends BaseGroup {
+  type: 'quote-grp';
+  nodes: BlockquoteNode[];
 }
 
-export interface CodeBlockGroup extends BaseGroup {
-  type: 'codeblock-grp';
-  node: Code;
+export interface SnippetGroup extends BaseGroup {
+  type: 'snippet-grp';
+  node: CodeNode;
 }
 
-export type Group = HeadingGroup | ListGroup | BlockquoteGroup | CodeBlockGroup;
+export type Group = HeadingGroup | ListGroup | QuoteGroup | SnippetGroup;
 
-export interface GroupedRoot extends RootTree {
+export interface GroupedNode extends RootNode {
   metadata: {
     grouped: boolean;
-    groupType: 'heading-grp' | 'list-grp' | 'blockquote-grp' | 'codeblock-grp' | 'single-grp';
+    groupType: 'heading-grp' | 'list-grp' | 'quote-grp' | 'snippet-grp' | 'node-grp';
   };
 }

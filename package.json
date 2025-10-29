@@ -13,13 +13,13 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
-    "@ai-sdk/google": "~2.0.20",
-    "@shikijs/rehype": "~3.13.0",
+    "@ai-sdk/google": "~2.0.25",
+    "@shikijs/rehype": "~3.14.0",
     "@types/hast": "~3.0.0",
     "@types/mdast": "~4.0.0",
-    "@types/node": "~24.8.0",
+    "@types/node": "~24.9.0",
     "@types/pg": "~8.15.5",
-    "ai": "~5.0.75",
+    "ai": "~5.0.80",
     "dotenv": "~17.2.0",
     "drizzle-kit": "~0.31.5",
     "drizzle-orm": "~0.44.5",
