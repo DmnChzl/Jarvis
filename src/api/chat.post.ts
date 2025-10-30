@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
   }
 
   await addMessage({
+    agentKey: body.agentKey,
     sessionId: body.sessionId,
     content: body.msgContent,
     role: 'user'

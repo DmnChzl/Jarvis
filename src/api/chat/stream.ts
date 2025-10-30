@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         break;
 
       case 'response':
-        const responseItem = ResponseItem({ content: message.content, bgColor: message.metadata.themeColor });
+        const responseItem = ResponseItem({ content: message.content });
         stream.push(htmlInline`${responseItem}`);
         break;
 

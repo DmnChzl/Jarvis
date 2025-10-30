@@ -1,6 +1,6 @@
 import { streamText, type LanguageModel, type Prompt, type Tool } from 'ai';
 import { findOneAgent } from '~repositories/agentsRepository';
-import { addMessage, findManyMessages } from '~repositories/messagesRepository';
+import { addMessage, findManyMessagesByAgent } from '~repositories/messagesRepository';
 import { GENERIC_PROMPT } from '~src/constants/prompt';
 import type { GroupedNode } from '~src/models/group';
 import { MarkdownStreamProcessor } from '~src/services/processors/markdownStreamProcessor';
@@ -19,7 +19,7 @@ export const processAgentResponse = async (agentKey: string, sessionId: string) 
   }
 
   const channel = `chat:${sessionId}`;
-  const messages = await findManyMessages(sessionId);
+  const messages = await findManyMessagesByAgent(sessionId, agentKey);
   const userMessages = messages.filter((msg) => msg.role === 'user');
   const lastUserMessage = userMessages[userMessages.length - 1];
 
@@ -34,11 +34,7 @@ export const processAgentResponse = async (agentKey: string, sessionId: string) 
       });
 
       nodeToHtml(...node.children).then((html) => {
-        publishRedisMessage(channel, {
-          type: 'response',
-          content: html,
-          metadata: { themeColor: currentAgent.themeColor }
-        });
+        publishRedisMessage(channel, { type: 'response', content: html });
       });
     }
   };

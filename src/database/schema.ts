@@ -15,7 +15,9 @@ export type AgentEntity = typeof agentsTable.$inferSelect;
 
 export const messagesTable = pgTable('messages', {
   id: serial('id').primaryKey(),
-  agentKey: varchar('agent_key').references(() => agentsTable.key),
+  agentKey: varchar('agent_key')
+    .notNull()
+    .references(() => agentsTable.key),
   sessionId: varchar('session_id', { length: 36 }).notNull(),
   role: varchar('role', { enum: ['assistant', 'user'] }).notNull(),
   content: text('content').notNull(),

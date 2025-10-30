@@ -13,10 +13,7 @@ export const chatMessageSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('response'),
-    content: z.string(),
-    metadata: z.object({
-      themeColor: z.string()
-    })
+    content: z.string()
   }),
   z.object({
     type: z.literal('end'),

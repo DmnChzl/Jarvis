@@ -54,6 +54,10 @@ export const BaseLayout = ({ title, favicon, dataTheme, content, scripts = [] }:
           padding: 1rem;
           border-radius: 0.5rem;
           overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .msg-response pre::-webkit-scrollbar {
+          display: none;
         }
         .msg-response code {
           font-family: 'JetBrains Mono', monospace;

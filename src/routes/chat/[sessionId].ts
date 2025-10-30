@@ -23,20 +23,23 @@ interface HeaderProps {
 const Header = ({ currentAgent, allAgents, sessionId }: HeaderProps) => {
   const btnGrp = allAgents
     .filter(({ key }) => key !== currentAgent.key)
-    .map(
-      (agent) =>
-        html`<a href="/chat/${sessionId}?agentKey=${agent.key}" class="relative">
+    .map((agent) => {
+      return html`
+        <a href="/chat/${sessionId}?agentKey=${agent.key}" class="relative">
           <img width="48" height="48" src="${agent.imgSrc}" alt="Ask something to ${agent.shortName}" />
-        </a>`
-    );
+        </a>
+      `;
+    });
 
-  return html`<header class="flex gap-x-4">
-    <div class="flex gap-x-4 items-center mr-auto">
-      <img width="48" height="48" src="${currentAgent.imgSrc}" alt="Logo" />
-      <h1 class="font-medium text-[24px]">${currentAgent.shortName}</h1>
-    </div>
-    ${btnGrp}
-  </header>`;
+  return html`
+    <header class="flex gap-x-4">
+      <div class="flex gap-x-4 items-center mr-auto">
+        <img width="48" height="48" src="${currentAgent.imgSrc}" alt="Logo" />
+        <h1 class="font-medium text-[24px]">${currentAgent.shortName}</h1>
+      </div>
+      ${btnGrp}
+    </header>
+  `;
 };
 
 export default eventHandler(async (event) => {
@@ -80,9 +83,7 @@ export default eventHandler(async (event) => {
           required />
         <input type="hidden" name="sessionId" value="${sessionId}" />
         <input type="hidden" name="agentKey" value="${agentKey}" />
-        <button class="text-neutral-900 bg-lime-200 hover:bg-lime-300 p-2 rounded-[8px]" type="submit">
-          ${SendIcon({})}
-        </button>
+        <button class="submit-request p-2 rounded-[8px]" type="submit">${SendIcon({})}</button>
       </form>
     </div>
   </div>`;

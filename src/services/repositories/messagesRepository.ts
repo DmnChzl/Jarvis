@@ -1,9 +1,9 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '~src/database';
-import { agentsTable, messagesTable, type AgentEntity, type MessageEntity } from '~src/database/schema';
+import { messagesTable, type MessageEntity } from '~src/database/schema';
 
 interface Message {
-  agentKey?: string;
+  agentKey: string;
   sessionId: string;
   role: 'user' | 'assistant';
   content: string;
@@ -34,20 +34,11 @@ export const findManyMessages = async (sessionId: string): Promise<MessageEntity
     .orderBy(messagesTable.createdAt);
 };
 
-interface MessageWithAgent {
-  message: MessageEntity;
-  agent: AgentEntity | null;
-}
-
-export const findManyMessagesWithAgent = async (sessionId: string): Promise<MessageWithAgent[]> => {
+export const findManyMessagesByAgent = async (sessionId: string, agentKey: string): Promise<MessageEntity[]> => {
   return await db
-    .select({
-      message: messagesTable,
-      agent: agentsTable
-    })
+    .select()
     .from(messagesTable)
-    .leftJoin(agentsTable, eq(messagesTable.agentKey, agentsTable.key))
-    .where(eq(messagesTable.sessionId, sessionId))
+    .where(and(eq(messagesTable.sessionId, sessionId), eq(messagesTable.agentKey, agentKey)))
     .orderBy(messagesTable.createdAt);
 };
 

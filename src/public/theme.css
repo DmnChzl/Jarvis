@@ -1,18 +1,58 @@
 :root {
-  --violet: #7c3aed;
-  --purple: #9333ea;
-  --fuchsia: #c026d3;
+  --amber-lighter: #fde68a;
+  --amber-lighten: #fcd34d;
+  --lime-lighter: #d9f99d;
+  --lime-lighten: #bef264;
+  --emerald-lighter: #a7f3d0;
+  --emerald-lighten: #6ee7b7;
+  --blue: #3b82f6;
+  --blue-darken: #2563eb;
+  --violet: #8b5cf6;
+  --violet-darken: #7c3aed;
+  --fuchsia: #d946ef;
+  --fuchsia-darken: #c026d3;
 }
 
 body {
-  --response-color: var(--violet);
+  --request-color: var(--lime-lighter);
+  --response-color: var(--violet-darken);
 }
-body[data-theme='j4rv1s'] {
-  --response-color: var(--violet);
+body .msg-request {
+  color: #171717;
+  background-color: var(--request-color);
 }
+body .msg-response {
+  color: #fff;
+  background-color: var(--response-color);
+}
+body .submit-request {
+  color: #171717;
+  background-color: var(--request-color);
+}
+body .submit-request:hover {
+  background-color: var(--lime-lighten);
+}
+
 body[data-theme='3d'] {
-  --response-color: var(--purple);
+  --request-color: var(--amber-lighter);
+  --response-color: var(--blue-darken);
 }
+body[data-theme='3d'] .submit-request:hover {
+  background-color: var(--amber-lighten);
+}
+
+body[data-theme='j4rv1s'] {
+  --request-color: var(--lime-lighter);
+  --response-color: var(--violet-darken);
+}
+body[data-theme='j4rv1s'] .submit-request:hover {
+  background-color: var(--lime-lighten);
+}
+
 body[data-theme='m0k4'] {
-  --response-color: var(--fuchsia);
+  --request-color: var(--emerald-lighter);
+  --response-color: var(--fuchsia-darken);
+}
+body[data-theme='m0k4'] .submit-request:hover {
+  background-color: var(--emerald-lighten);
 }

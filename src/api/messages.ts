@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, getQuery } from 'h3';
 import { findOneAgent } from '~repositories/agentsRepository';
-import { findManyMessagesWithAgent } from '~repositories/messagesRepository';
+import { findManyMessagesByAgent } from '~repositories/messagesRepository';
 import { DefaultView } from '~templates/components/default-view';
 import { MessageContainer } from '~templates/components/message-container';
 import { RequestItem } from '~templates/components/request-item';
@@ -25,16 +25,16 @@ export default defineEventHandler(async (event) => {
     icon: AgentIcon({ agentKey: query.agentKey, width: 48, height: 48, strokeWidth: 1 })
   });
 
-  const messages = await findManyMessagesWithAgent(query.sessionId);
+  const messages = await findManyMessagesByAgent(query.sessionId, query.agentKey);
   const items = await Promise.all(
-    messages.map(async ({ message, agent }) => {
-      if (message.role === 'assistant') {
-        const html = await mdToHtml(message.content);
-        return ResponseItem({ content: html, bgColor: agent?.themeColor });
+    messages.map(async (msg) => {
+      if (msg.role === 'assistant') {
+        const html = await mdToHtml(msg.content);
+        return ResponseItem({ content: html });
       }
 
-      // message.role === 'user'
-      return RequestItem({ content: message.content });
+      // msg.role === 'user'
+      return RequestItem({ content: msg.content });
     })
   );
 

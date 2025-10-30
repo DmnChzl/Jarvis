@@ -1,8 +1,9 @@
-node_modules
 dist
-.data
-.nitro
+node_modules
 .cache
-.output
+.data
+.DS_Store
 .env
 .env.local
+.nitro
+.output
