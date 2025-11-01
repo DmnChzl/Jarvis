@@ -1,8 +1,8 @@
 import { createError, createEventStream, defineEventHandler, getQuery, setResponseHeaders } from 'h3';
-import { chatMessageSchema } from '~src/schemas/redisSchema';
+import { chatMessageSchema } from '~src/schemas/eventSchema';
+import { subscribeToEventChannel } from '~src/services/events/eventService';
 import { RequestItem } from '~templates/components/request-item';
 import { ResponseItem } from '~templates/components/response-item';
-import { subscribeToRedisChannel } from '~utils/redisClient';
 import { htmlInline } from '~utils/render';
 
 export default defineEventHandler(async (event) => {
@@ -20,10 +20,9 @@ export default defineEventHandler(async (event) => {
   const stream = createEventStream(event);
   const channel = `chat:${query.sessionId}`;
 
-  await subscribeToRedisChannel(channel, chatMessageSchema, (message) => {
+  await subscribeToEventChannel(channel, chatMessageSchema, (message) => {
     switch (message.type) {
       case 'start':
-        // eslint-disable-next-line no-console
         console.log(channel, `${message.metadata.agentName} Has Started To Respond`);
         break;
 
@@ -38,7 +37,6 @@ export default defineEventHandler(async (event) => {
         break;
 
       case 'end':
-        // eslint-disable-next-line no-console
         console.log(channel, `${message.metadata.agentName} Has Finished To Respond`);
         break;
     }

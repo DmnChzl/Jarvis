@@ -1,51 +1,95 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '~src/database';
 import { messagesTable, type MessageEntity } from '~src/database/schema';
+import {
+  addMessage as addMessageInMemory,
+  clearMessages as clearMessagesInMemory,
+  delMessageById as delMessageByIdInMemory,
+  findAllMessages as findAllMessagesInMemory,
+  findManyMessagesByAgent as findManyMessagesByAgentInMemory,
+  findManyMessages as findManyMessagesInMemory,
+  findOneMessage as findOneMessageInMemory
+} from './defaultRepository';
 
-interface Message {
+interface MessageInput {
   agentKey: string;
   sessionId: string;
-  role: 'user' | 'assistant';
+  role: 'assistant' | 'user';
   content: string;
 }
 
-export const addMessage = async ({ agentKey, sessionId, role, content }: Message): Promise<MessageEntity> => {
-  const [message] = await db
-    .insert(messagesTable)
-    .values({ agentKey, sessionId, content, role, createdAt: new Date() })
-    .returning();
-  return message;
+export const addMessage = async ({ agentKey, sessionId, role, content }: MessageInput): Promise<MessageEntity> => {
+  try {
+    const [entity] = await db
+      .insert(messagesTable)
+      .values({ agentKey, sessionId, content, role, createdAt: new Date() })
+      .returning();
+    return entity;
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    return addMessageInMemory({ agentKey, sessionId, role, content });
+  }
 };
 
-export const findOneMessage = async (id: number): Promise<MessageEntity> => {
-  const [message] = await db.select().from(messagesTable).where(eq(messagesTable.id, id));
-  return message ?? null;
+export const findOneMessage = async (id: number): Promise<MessageEntity | null> => {
+  try {
+    const [entity] = await db.select().from(messagesTable).where(eq(messagesTable.id, id));
+    return entity ?? null;
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    return findOneMessageInMemory(id);
+  }
 };
 
 export const findAllMessages = async (): Promise<MessageEntity[]> => {
-  return await db.select().from(messagesTable);
+  try {
+    return await db.select().from(messagesTable);
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    return findAllMessagesInMemory();
+  }
 };
 
 export const findManyMessages = async (sessionId: string): Promise<MessageEntity[]> => {
-  return await db
-    .select()
-    .from(messagesTable)
-    .where(eq(messagesTable.sessionId, sessionId))
-    .orderBy(messagesTable.createdAt);
+  try {
+    return await db
+      .select()
+      .from(messagesTable)
+      .where(eq(messagesTable.sessionId, sessionId))
+      .orderBy(messagesTable.createdAt);
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    return findManyMessagesInMemory(sessionId);
+  }
 };
 
 export const findManyMessagesByAgent = async (sessionId: string, agentKey: string): Promise<MessageEntity[]> => {
-  return await db
-    .select()
-    .from(messagesTable)
-    .where(and(eq(messagesTable.sessionId, sessionId), eq(messagesTable.agentKey, agentKey)))
-    .orderBy(messagesTable.createdAt);
+  try {
+    return await db
+      .select()
+      .from(messagesTable)
+      .where(and(eq(messagesTable.sessionId, sessionId), eq(messagesTable.agentKey, agentKey)))
+      .orderBy(messagesTable.createdAt);
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    return findManyMessagesByAgentInMemory(sessionId, agentKey);
+  }
 };
 
 export const delMessageById = async (id: number) => {
-  await db.delete(messagesTable).where(eq(messagesTable.id, id));
+  try {
+    await db.delete(messagesTable).where(eq(messagesTable.id, id));
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    delMessageByIdInMemory(id);
+  }
 };
 
 export const clearMessages = async () => {
-  await db.delete(messagesTable);
+  try {
+    await db.delete(messagesTable);
+  } catch {
+    console.log('Unable to persist data; using an in-memory database by default...');
+    clearMessagesInMemory();
+  }
 };

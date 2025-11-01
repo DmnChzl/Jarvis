@@ -1,8 +1,8 @@
-import { createError, defineEventHandler, readBody, setResponseStatus } from 'h3';
+import { createError, defineEventHandler, getHeaders, readBody, setResponseStatus } from 'h3';
 import { findOneAgent } from '~repositories/agentsRepository';
 import { addMessage } from '~repositories/messagesRepository';
 import { processAgentResponse } from '~src/services/ai/agentService';
-import { publishRedisMessage } from '~utils/redisClient';
+import { publishEventMessage } from '~src/services/events/eventService';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<{ msgContent: string; sessionId: string; agentKey: string }>(event);
@@ -15,19 +15,30 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Agent Not Found' });
   }
 
-  await addMessage({
+  const headers = getHeaders(event);
+  const clientLocale = headers['x-client-locale'];
+  const clientTimeZone = headers['x-client-timezone'];
+
+  const userMessage = await addMessage({
     agentKey: body.agentKey,
     sessionId: body.sessionId,
     content: body.msgContent,
     role: 'user'
   });
 
-  publishRedisMessage(`chat:${body.sessionId}`, {
+  publishEventMessage(`chat:${body.sessionId}`, {
     type: 'request',
     content: body.msgContent
   });
 
-  processAgentResponse(body.agentKey, body.sessionId);
+  processAgentResponse({
+    userMessage,
+    agentKey: body.agentKey,
+    sessionId: body.sessionId,
+    userLocale: clientLocale,
+    userTimeZone: clientTimeZone
+  });
+
   setResponseStatus(event, 201, 'Created');
   return;
 });

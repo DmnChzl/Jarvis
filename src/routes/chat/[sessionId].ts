@@ -50,43 +50,54 @@ export default eventHandler(async (event) => {
   const currentAgent = await findOneAgent(agentKey);
   if (!currentAgent) return sendRedirect(event, '/');
 
-  const content = html`<div class="flex flex-col gap-y-4 size-full lg:w-[1024px] mx-auto">
-    ${Header({ currentAgent, allAgents, sessionId })}
+  const content = html`
+    <div class="flex flex-col gap-y-4 size-full lg:w-[1024px] mx-auto">
+      ${Header({ currentAgent, allAgents, sessionId })}
 
-    <div
-      class="flex flex-col gap-y-4 justify-end h-[calc(100%-64px)] bg-neutral-900 p-4 rounded-t-[16px] rounded-b-[32px]">
       <div
-        id="msg-container"
-        class="flex flex-col justify-end"
-        style="height: inherit;"
-        hx-get="/api/messages?sessionId=${sessionId}&agentKey=${agentKey}"
-        hx-trigger="load"
-        hx-swap="outerHTML">
-        ${DefaultView({
-          title: currentAgent.description,
-          subTitle: currentAgent.longDescription ?? '',
-          icon: AgentIcon({ agentKey, width: 48, height: 48, strokeWidth: 1 })
-        })}
-      </div>
+        class="flex flex-col gap-y-4 justify-end h-[calc(100%-64px)] bg-neutral-900 p-4 rounded-t-[16px] rounded-b-[32px]">
+        <div
+          id="msg-container"
+          class="flex flex-col justify-end"
+          style="height: inherit;"
+          hx-get="/api/messages?sessionId=${sessionId}&agentKey=${agentKey}"
+          hx-trigger="load"
+          hx-swap="outerHTML">
+          ${DefaultView({
+            title: currentAgent.description,
+            subTitle: currentAgent.longDescription ?? '',
+            icon: AgentIcon({ agentKey, width: 48, height: 48, strokeWidth: 1 })
+          })}
+        </div>
 
-      <form
-        class="flex gap-x-4 items-center bg-neutral-800 pl-4 pr-2 py-2 rounded-t-[8px] rounded-b-[16px]"
-        autocomplete="off"
-        hx-post="/api/chat"
-        hx-swap="none"
-        hx-on::after-request="document.getElementById('msg-content').value = '';">
-        <input
-          class="w-full appearance-none bg-transparent outline-none placeholder:text-neutral-400"
-          placeholder="Ask something..."
-          id="msg-content"
-          name="msgContent"
-          required />
-        <input type="hidden" name="sessionId" value="${sessionId}" />
-        <input type="hidden" name="agentKey" value="${agentKey}" />
-        <button class="submit-request p-2 rounded-[8px]" type="submit">${SendIcon({})}</button>
-      </form>
+        <form
+          class="flex gap-x-4 items-center bg-neutral-800 pl-4 pr-2 py-2 rounded-t-[8px] rounded-b-[16px]"
+          autocomplete="off"
+          hx-post="/api/chat"
+          hx-swap="none"
+          hx-on::before-request="setClientHeaders(event)"
+          hx-on::after-request="document.getElementById('msg-content').value = '';">
+          <input
+            class="w-full appearance-none bg-transparent outline-none placeholder:text-neutral-400"
+            placeholder="Ask something..."
+            id="msg-content"
+            name="msgContent"
+            required />
+          <input type="hidden" name="sessionId" value="${sessionId}" />
+          <input type="hidden" name="agentKey" value="${agentKey}" />
+          <button class="submit-request p-2 rounded-[8px]" type="submit">${SendIcon({})}</button>
+        </form>
+      </div>
     </div>
-  </div>`;
+
+    <script>
+      function setClientHeaders(event) {
+        const xhr = event.detail.xhr;
+        xhr.setRequestHeader('X-Client-Locale', navigator.language);
+        xhr.setRequestHeader('X-Client-Timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+      }
+    </script>
+  `;
 
   return BaseLayout({
     title: `Ask something to ${currentAgent.shortName}`,

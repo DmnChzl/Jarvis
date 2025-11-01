@@ -47,6 +47,10 @@ export const useRedisSubscriber = () => {
 
 export const publishRedisMessage = <T>(channel: string, message: T) => {
   const publisher = useRedisPublisher();
+  if (!publisher.isOpen) {
+    throw new Error('Redis Publish Failure');
+  }
+
   publisher.publish(channel, JSON.stringify(message));
 };
 
@@ -56,13 +60,16 @@ export const subscribeToRedisChannel = <T extends z.ZodType>(
   callback: (message: z.infer<T>) => void
 ) => {
   const subscriber = useRedisSubscriber();
+  if (!subscriber.isOpen) {
+    throw new Error('Redis Subscribe Failure');
+  }
 
   return subscriber.subscribe(channel, (value) => {
     try {
       const message = reparse(value, schema);
       callback(message);
     } catch (error) {
-      // eslint-disable-next-line
+      // eslint-disable-next-line no-console
       console.error(error);
     }
   });

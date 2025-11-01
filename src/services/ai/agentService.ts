@@ -6,48 +6,60 @@ import type { GroupedNode } from '~src/models/group';
 import { MarkdownStreamProcessor } from '~src/services/processors/markdownStreamProcessor';
 import { useAiProvider } from '~utils/aiProvider';
 import { astToMd, mdToAst, nodeToHtml } from '~utils/parser';
-import { publishRedisMessage } from '~utils/redisClient';
-import { getAgentTools } from '~utils/tools';
+// import { publishRedisMessage } from '~utils/redisClient';
+import { getAgentTools, getDateTimeTool } from '~utils/tools';
+import { publishEventMessage } from '../events/eventService';
+import type { MessageEntity } from '~src/database/schema';
 
-export const processAgentResponse = async (agentKey: string, sessionId: string) => {
+interface ResponseArgs {
+  userMessage: MessageEntity;
+  agentKey: string;
+  sessionId: string;
+  userLocale?: string;
+  userTimeZone?: string;
+}
+
+export const processAgentResponse = async (args: ResponseArgs) => {
   const provider = useAiProvider();
   const model = provider('gemini-2.5-flash');
 
-  const currentAgent = await findOneAgent(agentKey);
+  const currentAgent = await findOneAgent(args.agentKey);
   if (!currentAgent) {
     throw new Error('Agent Not Found');
   }
 
-  const channel = `chat:${sessionId}`;
-  const messages = await findManyMessagesByAgent(sessionId, agentKey);
-  const userMessages = messages.filter((msg) => msg.role === 'user');
-  const lastUserMessage = userMessages[userMessages.length - 1];
+  const channel = `chat:${args.sessionId}`;
+  const messages = await findManyMessagesByAgent(args.sessionId, args.agentKey);
+  if (messages.length === 0) messages.push(args.userMessage);
 
   const dispatchResponse = (nodes: GroupedNode[]) => {
     for (const node of nodes) {
       const msgContent = astToMd(node);
       addMessage({
-        agentKey,
-        sessionId,
+        agentKey: args.agentKey,
+        sessionId: args.sessionId,
         content: msgContent,
         role: 'assistant'
       });
 
       nodeToHtml(...node.children).then((html) => {
-        publishRedisMessage(channel, { type: 'response', content: html });
+        publishEventMessage(channel, { type: 'response', content: html });
       });
     }
   };
 
   try {
-    publishRedisMessage(channel, { type: 'start', metadata: { agentName: currentAgent.shortName } });
+    publishEventMessage(channel, { type: 'start', metadata: { agentName: currentAgent.shortName } });
 
     await generateTextChunks(
       {
         model,
         system: currentAgent.persona,
         messages,
-        tools: getAgentTools(agentKey)
+        tools: {
+          dateTimeTool: getDateTimeTool({ locale: args.userLocale, timeZone: args.userTimeZone }),
+          ...getAgentTools(args.agentKey)
+        }
       },
       {
         onTextDelta: dispatchResponse,
@@ -55,7 +67,7 @@ export const processAgentResponse = async (agentKey: string, sessionId: string) 
           await generateTextChunks(
             {
               model,
-              prompt: GENERIC_PROMPT(lastUserMessage.content, output, currentAgent.persona)
+              prompt: GENERIC_PROMPT(args.userMessage.content, output, currentAgent.persona)
             },
             {
               onTextDelta: dispatchResponse
@@ -65,9 +77,9 @@ export const processAgentResponse = async (agentKey: string, sessionId: string) 
       }
     );
 
-    publishRedisMessage(channel, { type: 'end', metadata: { agentName: currentAgent.shortName } });
+    publishEventMessage(channel, { type: 'end', metadata: { agentName: currentAgent.shortName } });
   } catch {
-    publishRedisMessage(channel, { type: 'error', reason: 'Stream Text Failure' });
+    publishEventMessage(channel, { type: 'error', reason: 'Stream Text Failure' });
   }
 };
 

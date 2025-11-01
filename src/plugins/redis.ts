@@ -4,14 +4,19 @@ export default async () => {
   console.log('Redis Client Loading...');
   const startTime = new Date().getTime();
 
-  const client = useRedisClient();
-  if (!client.isOpen) await client.connect();
+  try {
+    const client = useRedisClient();
+    if (!client.isOpen) await client.connect();
 
-  const publisher = useRedisPublisher();
-  if (!publisher.isOpen) await publisher.connect();
+    const publisher = useRedisPublisher();
+    if (!publisher.isOpen) await publisher.connect();
 
-  const subscriber = useRedisSubscriber();
-  if (!subscriber.isOpen) await subscriber.connect();
+    const subscriber = useRedisSubscriber();
+    if (!subscriber.isOpen) await subscriber.connect();
+  } catch {
+    console.log('Fail To Load Redis Client');
+    return;
+  }
 
   const endTime = new Date().getTime();
   const secondDiffing = ((endTime - startTime) / 3600).toFixed(2);
