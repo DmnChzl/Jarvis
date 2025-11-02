@@ -1,4 +1,4 @@
-import { addAgent } from '~repositories/agentsRepository';
+import { addAgent, findOneAgent } from '~repositories/agentsRepository';
 import { ED_PROMPT, JARVIS_PROMPT, MOKA_PROMPT } from '~src/constants/prompt';
 import { AgentBuilder } from '~src/models/agentBuilder';
 
@@ -38,9 +38,16 @@ const mokaAgent = new AgentBuilder()
 export default async () => {
   console.log('Agents Loading...');
   const startTime = new Date().getTime();
-  addAgent(edAgent);
-  addAgent(jarvisAgent);
-  addAgent(mokaAgent);
+
+  const isEdAgentExists = await findOneAgent(edAgent.key).then((agent) => !!agent);
+  if (!isEdAgentExists) addAgent(edAgent);
+
+  const isJarvisAgentExists = await findOneAgent(jarvisAgent.key).then((agent) => !!agent);
+  if (!isJarvisAgentExists) addAgent(jarvisAgent);
+
+  const isMokaAgentExists = await findOneAgent(mokaAgent.key).then((agent) => !!agent);
+  if (!isMokaAgentExists) addAgent(mokaAgent);
+
   const endTime = new Date().getTime();
   const secondDiffing = ((endTime - startTime) / 3600).toFixed(2);
   console.log(`Agents Loaded In ${secondDiffing}s`);
